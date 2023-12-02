@@ -47,9 +47,9 @@ const handleConfirmDate = (date) => {
 
 const Insights = () => {
     const [analysisHistory, setAnalysisHistory] = useState(null);
-    const [date,setDate]= useState(toDate(new Date("2023-10-17")));
-    const startDate = startOfWeek(date, { weekStartsOn: 1 });
-    const endDate = endOfWeek(date, { weekStartsOn: 1 });
+    const [date,setDate]= useState(toDate(new Date()));
+    const startDate = startOfWeek(toDate(new Date()), { weekStartsOn: 1 });
+    const endDate = endOfWeek(toDate(new Date()), { weekStartsOn: 1 });
     const [gData,setgData]= useState([]);
   const [isTimePickerVisible, setTimePickerVisibility] = useState(false);
   var [showCal,setShowCal]=useState(false)
@@ -59,8 +59,21 @@ const Insights = () => {
         'Moderate': 3,
         'Severe': 4,
     };
-    const [xData, setxData]= useState([]);
     const [barData, setbarData] = useState([]);
+    const [yData, setyData] = useState([])
+    const [yLimit, setyLimit] = useState(0)
+    const [barDataA, setbarDataA] = useState([]);
+    const [yDataA, setyDataA] = useState([])
+    const [yLimitA, setyLimitA] = useState(0)
+    var tempX= []
+            var current=startDate
+            for (let i=0; i<6;i++){
+                tempX.push(new Date(current))
+                current=addDays(current,1)
+            }
+            tempX.push(new Date(endDate))
+            var t1=tempX.map(x=>x.getDate()+"/"+ x.getMonth()+"/"+ x.getFullYear().toString().substring(2))
+            const [xData, setxData]= useState(t1);
 
     useEffect(() => {
         const fetchData = async () => {
@@ -88,6 +101,33 @@ const Insights = () => {
                 tempBar[d1.getDay()==0?6:d1.getDay()-1]=LEVELS[x.depression_level]
              })
              setbarData(tempBar)
+             var largest=0
+             tempBar.forEach(x=>{
+                if(x>largest){largest=x}
+
+             })
+             var arr3=[]
+             for(var i=0; i<=largest; i++)arr3.push(i)
+             setyData(arr3)
+            setyLimit(largest)
+            //_______________________________________________________
+            var tempBar1 = []
+            for(var i=0 ; i<7; i++){tempBar1.push(0)}
+            filteredDocs.forEach(x=>{
+                let d1=toDate(new Date(x.timestamp))
+                tempBar1[d1.getDay()==0?6:d1.getDay()-1]=LEVELS[x.anxiety_level]
+             })
+             setbarDataA(tempBar1)
+             var largest1=0
+             tempBar1.forEach(x=>{
+                if(x>largest1){largest1=x}
+
+             })
+             var arr4=[]
+             for(var i=0; i<=largest1; i++)arr4.push(i)
+             setyDataA(arr4)
+            setyLimitA(largest1)
+
 
 
 
@@ -122,6 +162,34 @@ const Insights = () => {
                 tempBar[d1.getDay()==0?6:d1.getDay()-1]=LEVELS[x.depression_level]
              })
              setbarData(tempBar)
+              var largest=0
+             tempBar.forEach(x=>{
+                if(x>largest){largest=x}
+
+             })
+             var arr3=[]
+             for(var i=0; i<=largest; i++)arr3.push(i)
+             setyData(arr3)
+            setyLimit(largest)
+            //_____________________________________
+            var tempBar1 = []
+            for(var i=0 ; i<7; i++){tempBar1.push(0)}
+            filteredDocs.forEach(x=>{
+                let d1=toDate(new Date(x.timestamp))
+                tempBar1[d1.getDay()==0?6:d1.getDay()-1]=LEVELS[x.anxiety_level]
+             })
+             setbarDataA(tempBar1)
+             var largest1=0
+             tempBar1.forEach(x=>{
+                if(x>largest1){largest1=x}
+
+             })
+             var arr4=[]
+             for(var i=0; i<=largest1; i++)arr4.push(i)
+             setyDataA(arr4)
+            setyLimitA(largest1)
+
+             
     };
 
         fetchData();
@@ -152,17 +220,17 @@ const Insights = () => {
     return (
         <ScrollView contentContainerStyle={styles.container}>
         
-            <Button onPress={()=>{setShowCal(true)}} >cal</Button>
-          <DateTimePickerModal
+                  <DateTimePickerModal
         isVisible={showCal}
         mode="date"
         onConfirm={(d)=>{
             setDate(new Date(d)); setShowCal(false);}}
         onCancel={()=>{setShowCal(false)}}
       />  
-       <View style={{ flexDirection: 'row', height: 300, paddingVertical: 16 }}>
+      
+       <View style={{ flexDirection: 'row', height: 300,width:"90%", paddingVertical: 16 }}>
                 <YAxis
-                    data={[0,1, 2, 3, 4]}
+                    data={yLimit==0?[0,1,2,3,4]:yData}
                     contentInset={{ top: 10, bottom: 10 }}
                     svg={{ fontSize: 10, fill: 'grey' }}
                     labelStyle={{ color: 'black' }}
@@ -187,7 +255,37 @@ const Insights = () => {
                     />
                 </View>
             </View>
+            <View style={{ flexDirection: 'row', height: 300,width:"90%", paddingVertical: 16 }}>
+                <YAxis
+                    data={yLimitA==0?[0,1,2,3,4]:yDataA}
+                    contentInset={{ top: 10, bottom: 10 }}
+                    svg={{ fontSize: 10, fill: 'grey' }}
+                    labelStyle={{ color: 'black' }}
+                />
+                <View style={{ flex: 1, marginLeft: 10 }}>
+                    <BarChart
+                        style={{ flex: 1 }}
+                        data={barDataA}
+                        contentInset={{ top: 10, bottom: 10 }}
+                        spacing={0.2}
+                        gridMin={0}
+                        svg={{ fill: 'rgba(34, 65, 244, 0.8)' }}
+                    >
+                        <Grid />
+                    </BarChart>
+                    <XAxis
+                        style={{ marginHorizontal: -10, paddingTop: 10 }}
+                        data={xData}
+                        formatLabel={(value, index) => xData[index]}
+                        contentInset={{ left: 25, right: 25 }}
+                        svg={{ fontSize: 10, fill: 'black' }}
+                    />
+                </View>
+            </View>
+            <Button onPress={()=>{setShowCal(true)}} >cal</Button>
+
         </ScrollView>
+    
     );
 };
 
